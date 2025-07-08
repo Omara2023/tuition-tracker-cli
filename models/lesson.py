@@ -19,10 +19,15 @@ class Lesson(Base):
     date = Column(Date, nullable=False)
     
     rate = relationship("Rate", back_populates="lessons")
-
-    __table_args__ = (
-        UniqueConstraint("student_id", "level", name="uq_student_level"),
+    lesson_payments = relationship("LessonPayment", back_populates="lesson", cascade="all, delete-orphan")
+    
+    payments = relationship(
+        "Payment",
+        secondary="lesson_payments",
+        viewonly=True,
+        back_populates="lessons",
     )
+
 
     @property
     def student(self):

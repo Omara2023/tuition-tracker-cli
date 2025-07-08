@@ -12,6 +12,14 @@ class Payment(Base):
     amount = Column(Numeric(10, 2), nullable=False) 
 
     parent = relationship("Parent", back_populates="payments")
+    lesson_payments = relationship("LessonPayment", back_populates="payment", cascade="all, delete-orphan")
+
+    lessons = relationship(
+        "Lesson",
+        secondary="lesson_payments",
+        viewonly=True,
+        back_populates="payments",
+    )
 
     __table_args__ = (
         UniqueConstraint("timestamp", "parent_id", name="uix_parent_timestamp"),
