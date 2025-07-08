@@ -15,7 +15,10 @@ class Rate(Base):
     student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
     level = Column(Enum(RateLevel), nullable=False)
     hourly_rate = Column(Float, nullable=False)
+
     student = relationship("Student", back_populates="rates")
+    lessons = relationship("Lesson", back_populates="rate", cascade="all, delete-orphan")
+    
     __table_args__ = (
         UniqueConstraint("student_id", "level", name="uq_student_level"),
     )

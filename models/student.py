@@ -11,8 +11,8 @@ class Student(Base):
     surname = Column(String(50), index=True, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
-
     parent_id = Column(Integer, ForeignKey("parents.id"), nullable=False) 
+   
     parent = relationship("Parent", back_populates="students")
     rates = relationship("Rate", back_populates="student", cascade="all, delete-orphan")
 
