@@ -14,4 +14,5 @@ class Student(Base):
 
     parent_id = Column(Integer, ForeignKey("parents.id"), nullable=False) 
     parent = relationship("Parent", back_populates="students")
+    rates = relationship("Rate", back_populates="student", cascade="all, delete-orphan")
 
