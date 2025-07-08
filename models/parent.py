@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy.orm import relationship
 from db.base import Base
 from datetime import datetime, timezone
 
-class User(Base):
+class Parent(Base):
     __tablename__ = "parents"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
@@ -11,4 +12,4 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
-    
+    students = relationship("Student", back_populates="parent")
