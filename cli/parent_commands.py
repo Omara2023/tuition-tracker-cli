@@ -1,5 +1,7 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+from services.parent_service import create_parent, list_parents, update_parent, delete_parent, get_parent
+from db.cm import get_session
 
 def handle_parent_menu():
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
@@ -8,14 +10,93 @@ def handle_parent_menu():
         choice = prompt("Parents > ", completer=commands).strip().lower()
         
         if choice == "add":
-            print("Adding parent... (not yet implemented)")
+            cli_create_parent()
         elif choice == "list":
-            print("Listing parents... (not yet implemented)")
+            cli_list_parents()
         if choice == "update":
-            print("Updating parent... (not yet implemented)")
+            cli_update_parent()
         elif choice == "delete":
-            print("Deleting parent... (not yet implemented)")
+            cli_delete_parent()
         elif choice == "back":
             break
         else:
             print("Unknown command.")
+
+def cli_create_parent() -> None:
+    try:
+        forename = prompt("Forename: ").strip()
+        surname = prompt("Surname: ").strip()
+        is_active = prompt("Is active, True or False (default True):  ").strip().lower()
+    
+        data = {}
+
+        if not forename or not surname or not (is_active in ["true", "false"]):
+            raise 
+
+        data["forename"] = forename
+        data["surname"] = surname
+        data["is_active"] = is_active == "true"
+
+        with get_session() as db:
+            created = create_parent(db, data)
+            if created:
+                print(f"Created parent: {created.id}")
+            else:
+                print("Failed to craete parent.")
+
+    except ValueError:
+        print("Invalid input.")
+
+def cli_list_parents() -> None:
+    try:
+        with get_session() as db:
+            parents = list_parents(db)
+            if parents:
+                for i in parents:
+                    print(i)
+            else:
+                print("Failed to retrieve parents.")
+    except Exception as e:
+        print(f"Failed to retrieve parents {e}.")
+
+def cli_update_parent() -> None:
+    try:
+        id = int(prompt("Enter parent ID to update: "))
+        forename = prompt("New forename (leave blank to skip): ").strip()
+        surname = prompt("New surname (leave blank to skip): ").strip()
+        is_active = prompt("Is active, True or False (leave blank to skip): ").strip().lower()
+
+        updates = dict()
+
+        if forename:
+            updates["forename"] = forename
+        if surname:
+            updates["surname"] = surname
+        if is_active:
+            updates["is_active"] = True if is_active == "true" else False
+
+        with get_session() as db:
+            updated = update_parent(db, id, updates)
+            if updated:
+                print(f"Updated parent: {updated.id}")
+            else:
+                print("Parent not found.")
+
+    except ValueError:
+        print("Invalid input.")
+
+def cli_delete_parent() -> None:
+    try:
+        id = int(prompt("Enter parent ID to update: "))
+
+        with get_session() as db: 
+            to_delete = get_parent(db, id)
+            choice = prompt(f"Are you sure you want to delete parent {to_delete.id} (yes or no)?").strip().lower()
+            if choice in ["y", "yes"]:
+                if delete_parent(db, id):
+                    print("Successfully deleted parent.")
+                else:
+                    print("Failed to delete parent.")
+            
+    except ValueError:
+        print("Invalid parent id.")
