@@ -1,2 +1,1 @@
-# tuition-tracker-cli
-A lightweight command-line application for tracking and managing tuition payments in a self-operated tutoring business. Built with SQLAlchemy and designed for local use.
+A lightweight command-line application for managing tuition payments in a self-operated tutoring business. Built with Python and SQLAlchemy, this local CLI tool offers fast and flexible fee tracking for independent tutors.
