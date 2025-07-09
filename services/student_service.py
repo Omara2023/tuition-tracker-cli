@@ -1,35 +1,18 @@
 from sqlalchemy.orm import Session
 from models.student import Student
+from services.crud import create, list_all, get, update_data, delete
 
 def create_student(session: Session, data: dict) -> Student:
-    student = Student(**data)
-    session.add(student)
-    session.flush()
-    session.refresh(student)
-    return student
+    return create(session, Student, data)
 
 def list_students(session: Session) -> list[Student]:
-    return session.query(Student).all()
+    return list_all(session, Student)
 
 def get_student(session: Session, id: int) -> Student:
-    return session.get(Student, id)
+    return get(session, Student, id)
 
 def update_student(session: Session, id: int, update: dict) -> Student | None:
-    student = session.get(Student, id)
-    if not student:
-        return None
-
-    for key, value in update.items():
-        if hasattr(student, key):
-            setattr(student, key, value)
-
-    session.flush()
-    session.refresh(student)
-    return student
+    return update_data(session, Student, id, update)
 
 def delete_student(session: Session, id: int) -> bool:
-    student = session.get(Student, id)
-    if not student:
-        return False
-    session.delete(student)
-    return True
+    return delete(session, Student, id)
