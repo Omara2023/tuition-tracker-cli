@@ -42,7 +42,7 @@ def cli_create_parent() -> None:
             if created:
                 print(f"Created parent: {created.id}")
             else:
-                print("Failed to craete parent.")
+                print("Failed to create parent.")
 
     except ValueError:
         print("Invalid input.")
@@ -87,7 +87,7 @@ def cli_update_parent() -> None:
 
 def cli_delete_parent() -> None:
     try:
-        id = int(prompt("Enter parent ID to update: "))
+        id = int(prompt("Enter parent ID to delete: "))
 
         with get_session() as db: 
             to_delete = get_parent(db, id)
