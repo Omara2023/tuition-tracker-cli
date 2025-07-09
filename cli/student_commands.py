@@ -11,13 +11,13 @@ def handle_student_menu() -> None:
         choice = prompt("Students > ", completer=commands).strip().lower()
         
         if choice == "add":
-            print("Adding student... (not yet implemented)")
+            cli_create_student()
         elif choice == "list":
-            print("Listing students... (not yet implemented)")
+            cli_list_students()
         if choice == "update":
-            print("Updating student... (not yet implemented)")
+            cli_update_student()
         elif choice == "delete":
-            print("Deleting student... (not yet implemented)")
+            cli_delete_student()
         elif choice == "back":
             break
         else:
