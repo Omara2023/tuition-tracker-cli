@@ -15,7 +15,7 @@ def handle_rate_menu():
             cli_create_rate()
         elif choice == "list":
             cli_list_rates()
-        if choice == "update":
+        elif choice == "update":
             cli_update_rate()
         elif choice == "delete":
             cli_delete_rate()
