@@ -229,4 +229,9 @@ pip-selfcheck.json
 .history
 .ionide
 
+#Exclude the actual .db file
+*.db
+
+alembic/versions
+
 # End of https://www.toptal.com/developers/gitignore/api/jupyternotebooks,python,data,visualstudiocode,venv
