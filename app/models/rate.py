@@ -22,3 +22,14 @@ class Rate(Base):
     __table_args__ = (
         UniqueConstraint("student_id", "level", name="uq_student_level"),
     )
+
+def string_to_level_enum(input: str) -> RateLevel:
+    """Helper method to translate user input to enum."""
+    mapping = {
+        "gcse": RateLevel.GCSE,
+        "a-level": RateLevel.A_LEVEL,
+    }
+    try:
+        return mapping[input.strip().lower()]
+    except KeyError:
+        raise ValueError(f"Invalid rate level: {input!r}")
