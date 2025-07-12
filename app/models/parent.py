@@ -13,3 +13,5 @@ class Parent(Base):
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
     students = relationship("Student", back_populates="parent")
+    payments = relationship("Payment", back_populates="parent")
+
