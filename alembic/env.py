@@ -5,13 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.db.base import Base
-import app.models.parent
-import app.models.student
-import app.models.rate
-import app.models.lesson
-import app.models.payment
-import app.models.lesson_payment
+from app.db.models_registry import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
