@@ -14,7 +14,7 @@ def handle_student_menu() -> None:
             cli_create_student()
         elif choice == "list":
             cli_list_students()
-        if choice == "update":
+        elif choice == "update":
             cli_update_student()
         elif choice == "delete":
             cli_delete_student()
