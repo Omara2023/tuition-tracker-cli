@@ -68,15 +68,15 @@ def cli_list_rates() -> None:
 
 def cli_update_rate() -> None:
     try:
-        id = int(prompt("Enter rate ID to update: "))
-        student_id = int(prompt("New student_id (leave blank to skip): ").strip())
+        id = int(prompt("Enter RateID to update: "))
+        student_id = prompt("New StudentID (leave blank to skip): ").strip()
         level = prompt("New level: GCSE or A-LEVEL (leave blank to skip): ").strip()
         hourly_rate = prompt("New hourly rate: (leave blank to skip): ").strip().lower()
 
         updates = dict()
 
         if student_id:
-            updates["student_id"] = student_id
+            updates["student_id"] = int(student_id)
         if level:
             updates["level"] = string_to_level_enum(level)
         if hourly_rate:
@@ -85,7 +85,7 @@ def cli_update_rate() -> None:
         with get_session() as db:
             updated = update_rate(db, id, updates)
             if updated:
-                print(f"Updated rate: {updated.id}")
+                print(f"Updated rate: {updated}")
             else:
                 print("Rate not found.")
 
