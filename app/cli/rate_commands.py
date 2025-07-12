@@ -3,7 +3,7 @@ from prompt_toolkit.completion import WordCompleter
 from app.db.cm import get_session
 from app.services.rate_service import create_rate, list_rates, get_rate, update_rate, delete_rate
 from app.services.student_service import get_student
-from app.models.rate import RateLevel, string_to_level_enum
+from app.models.rate import string_to_level_enum
 
 def handle_rate_menu():
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
