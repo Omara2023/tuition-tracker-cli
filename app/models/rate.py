@@ -23,6 +23,15 @@ class Rate(Base):
         UniqueConstraint("student_id", "level", name="uq_student_level"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"Rate(id={self.id}, student_id={self.student_id}, "
+            f"level={self.level}, hourly_rate=£{self.hourly_rate:.2f} "
+        )
+    
+    def __str__(self) -> str:
+        return f"{self.id} - {self.student.forename} {self.student.surname} - {self.level} - {self.hourly_rate:.2f}"
+
 def string_to_level_enum(input: str) -> RateLevel:
     """Helper method to translate user input to enum."""
     mapping = {
