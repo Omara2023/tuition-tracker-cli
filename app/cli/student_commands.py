@@ -27,11 +27,11 @@ def cli_create_student() -> None:
     try:
         forename = prompt("Forename: ").strip()
         surname = prompt("Surname: ").strip()
-        is_active = prompt("Is active, True or False (default True):  ").strip().lower()
+        is_active = prompt("Is active, yes or yes (default yes): ").strip().lower()
         parent_id = int(prompt("Enter parent ID: "))
 
-        if not forename or not surname or not (is_active in ["true", "false"]) or not parent_id:
-            raise 
+        if not forename or not surname or not (is_active in ["yes", "y", "no", "n"]) or not parent_id:
+            raise ValueError
 
         with get_session() as db:
             parent = get_parent(db, parent_id)
@@ -56,7 +56,7 @@ def cli_list_students() -> None:
                 for i in students:
                     print(i)
             else:
-                raise Exception
+                print("Zero students to list.")
     except Exception:
         print("Failed to retreive students.")
 
@@ -65,7 +65,7 @@ def cli_update_student() -> None:
         id = int(prompt("Enter ID of student to update: "))
         forename = prompt("New forename (leave blank to skip): ").strip()
         surname = prompt("New surname (leave blank to skip): ").strip()
-        is_active = prompt("Is active, True or False (leave blank to skip): ").strip().lower()
+        is_active = prompt("Is active, yes or no (leave blank to skip): ").strip().lower()
         parent_id = int(prompt("New parent ID: (leave blank to skip): "))
 
         updates = dict()
@@ -75,7 +75,7 @@ def cli_update_student() -> None:
         if surname:
             updates["surname"] = surname
         if is_active:
-            updates["is_active"] = True if is_active == "true" else False
+            updates["is_active"] = True if is_active in ["yes", "y"] else False
         if parent_id:
             updates["parent_id"] = parent_id
 

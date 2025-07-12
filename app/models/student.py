@@ -25,7 +25,7 @@ class Student(Base):
     
     def __str__(self) -> str:
         status = "Active" if self.is_active is True else "Inactive"
-        return f"{self.id} - {self.forename} {self.surname} - ({status}) - ParentID {self.parent_id}"
+        return f"ID {self.id} - {self.forename} {self.surname} - ({status}) - ParentID {self.parent_id}"
 
 
 
