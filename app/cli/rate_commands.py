@@ -28,12 +28,12 @@ def cli_create_rate() -> None:
     try:
         student_id = int(prompt("Student ID: ").strip())
         level = prompt("Level ").strip()
-        rate = float(prompt("Hourly rate (GBP):  ").strip().lower())
+        rate = float(prompt("Hourly rate (GBP): ").strip().lower())
     
         data = {}
 
         if not student_id or not level or not rate:
-            raise 
+            raise ValueError
 
         data["student_id"] = student_id
         data["level"] = string_to_level_enum(level)        
@@ -62,7 +62,7 @@ def cli_list_rates() -> None:
                 for i in rates:
                     print(i)
             else:
-                print("Failed to retrieve rates.")
+                print("Zero rates to list.")
     except Exception as e:
         print(f"Failed to retrieve rates {e}.")
 
