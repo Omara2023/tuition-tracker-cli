@@ -41,7 +41,20 @@ class Lesson(Base):
     def __str__(self) -> str:
         return f"{self.id} - {self.rate} - {self.subject} - {self.duration}hrs - {self.date}"
 
-
     @property
     def student(self):
         return self.rate.student
+    
+def string_to_subject_enum(input_string: str) -> Subjects:
+    "Converter function to transform text input to enum."
+    match input_string.strip().lower():
+        case "mathematics":
+            return Subjects.MATHEMATICS
+        case "biology":
+            return Subjects.BIOLOGY
+        case "chemistry":
+            return Subjects.CHEMISTRY
+        case "physics":
+            return Subjects.PHYSICS
+        case _:
+            raise ValueError(f"Invalid subject: {input_string!r}")
