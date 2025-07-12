@@ -34,13 +34,13 @@ class Rate(Base):
     def __str__(self) -> str:
         return f"{self.id} - {self.student.forename} {self.student.surname} - {self.level} - £{self.hourly_rate:.2f}"
 
-def string_to_level_enum(input: str) -> RateLevel:
+def string_to_level_enum(input_string: str) -> RateLevel:
     """Helper method to translate user input to enum."""
     mapping = {
         "gcse": RateLevel.GCSE,
         "a-level": RateLevel.A_LEVEL,
     }
     try:
-        return mapping[input.strip().lower()]
+        return mapping[input_string.strip().lower()]
     except KeyError:
-        raise ValueError(f"Invalid rate level: {input!r}")
+        raise ValueError(f"Invalid rate level: {input_string!r}")
