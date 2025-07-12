@@ -1,10 +1,10 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
-from cli.parent_commands import handle_parent_menu
-from cli.student_commands import handle_student_menu
-from cli.rate_commands import handle_rate_menu
-from cli.lesson_commands import handle_lesson_menu
-from cli.payment_commands import handle_payment_menu
+from app.cli.parent_commands import handle_parent_menu
+from app.cli.student_commands import handle_student_menu
+from app.cli.rate_commands import handle_rate_menu
+from app.cli.lesson_commands import handle_lesson_menu
+from app.cli.payment_commands import handle_payment_menu
 
 main_commands = WordCompleter(["parents", "students", "rates", "lessons", "payments", "exit", "quit"], ignore_case=True)
 

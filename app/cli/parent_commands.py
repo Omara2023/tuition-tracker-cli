@@ -1,7 +1,7 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
-from services.parent_service import create_parent, list_parents, update_parent, delete_parent, get_parent
-from db.cm import get_session
+from app.services.parent_service import create_parent, list_parents, update_parent, delete_parent, get_parent
+from app.db.cm import get_session
 
 def handle_parent_menu():
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
