@@ -32,7 +32,7 @@ class Rate(Base):
         )
     
     def __str__(self) -> str:
-        return f"{self.id} - {self.student.forename} {self.student.surname} - {self.level} - {self.hourly_rate:.2f}"
+        return f"{self.id} - {self.student.forename} {self.student.surname} - {self.level} - £{self.hourly_rate:.2f}"
 
 def string_to_level_enum(input: str) -> RateLevel:
     """Helper method to translate user input to enum."""
