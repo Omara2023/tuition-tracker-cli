@@ -80,7 +80,7 @@ def cli_update_rate() -> None:
         if level:
             updates["level"] = string_to_level_enum(level)
         if hourly_rate:
-            updates["rate"] = float(hourly_rate)
+            updates["hourly_rate"] = float(hourly_rate)
 
         with get_session() as db:
             updated = update_rate(db, id, updates)
@@ -98,7 +98,7 @@ def cli_delete_rate() -> None:
 
         with get_session() as db: 
             to_delete = get_rate(db, id)
-            choice = prompt(f"Are you sure you want to delete rate {to_delete.id} (yes or no)?").strip().lower()
+            choice = prompt(f"Are you sure you want to delete rate {to_delete.id} (yes or no)? ").strip().lower()
             if choice in ["y", "yes"]:
                 if delete_rate(db, id):
                     print("Successfully deleted rate.")
