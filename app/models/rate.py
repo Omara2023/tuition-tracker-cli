@@ -7,6 +7,8 @@ class RateLevel(enum.Enum):
     GCSE = "GCSE"
     A_LEVEL = "A-Level"
 
+    def __str__(self) -> str:
+        return f"{self.value}"
 
 class Rate(Base):
     __tablename__ = "rates"
