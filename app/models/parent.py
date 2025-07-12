@@ -15,3 +15,15 @@ class Parent(Base):
     students = relationship("Student", back_populates="parent")
     payments = relationship("Payment", back_populates="parent")
 
+    def __repr__(self) -> str:
+        return (
+            f"Parent(id={self.id}, forename={self.forename!r}, "
+            f"surname={self.surname!r}, is_active={self.is_active}, "
+            f"created_at={self.created_at})"
+        )
+    
+    def __str__(self) -> str:
+        status = "Active" if self.is_active is True else "Inactive"
+        return f"{self.id} - {self.forename} {self.surname} - ({status})"
+
+
