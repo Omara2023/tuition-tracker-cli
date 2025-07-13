@@ -5,7 +5,7 @@ from app.services.crud import create, list_all, get, update_data, delete
 def create_payment(session: Session, data: dict) -> Payment:
     return create(session, Payment, data)
 
-def list_payment(session: Session) -> list[Payment]:
+def list_payments(session: Session) -> list[Payment]:
     return list_all(session, Payment)
 
 def get_payment(session: Session, id: int) -> Payment:
