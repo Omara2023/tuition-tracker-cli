@@ -16,7 +16,7 @@ def handle_lesson_menu():
             cli_create_lesson()
         elif choice == "list":
             cli_list_lessons()
-        if choice == "update":
+        elif choice == "update":
             cli_update_lesson()
         elif choice == "delete":
             cli_delete_lesson()

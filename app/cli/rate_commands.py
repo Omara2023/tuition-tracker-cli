@@ -45,7 +45,7 @@ def cli_create_rate() -> None:
                 return
             created = create_rate(db, data)
             if created:
-                print(f"Created rate: {created.id}")
+                print(f"Created rate: {created}")
             else:
                 print("Failed to create rate.")
 

@@ -41,7 +41,7 @@ def cli_create_student() -> None:
             
             created = create_student(db, data={"forename": forename, "surname": surname, "is_active": is_active == "true", "parent_id" : parent_id})
             if created:
-                print(f"Created student: {created.id}")
+                print(f"Created student: {created}")
             else:
                 print("Failed to create student.")
 
@@ -87,7 +87,7 @@ def cli_update_student() -> None:
                     return
             updated = update_student(db, id, updates)
             if updated:
-                print(f"Updated student: {updated.id}")
+                print(f"Updated student: {updated}")
             else:
                 print("Student not found.")
 

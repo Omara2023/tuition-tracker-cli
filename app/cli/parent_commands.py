@@ -40,7 +40,7 @@ def cli_create_parent() -> None:
         with get_session() as db:
             created = create_parent(db, data)
             if created:
-                print(f"Created parent: {created.id}")
+                print(f"Created parent: {created}")
             else:
                 print("Failed to create parent.")
 
@@ -78,7 +78,7 @@ def cli_update_parent() -> None:
         with get_session() as db:
             updated = update_parent(db, id, updates)
             if updated:
-                print(f"Updated parent: {updated.id}")
+                print(f"Updated parent: {updated}")
             else:
                 print("Parent not found.")
 
