@@ -11,6 +11,8 @@ main_commands = WordCompleter(["parents", "students", "rates", "lessons", "payme
 
 def main_loop() -> None:
     """Main CLI loop."""
+
+    print("Main: 'parents', 'students', 'rates', 'lessons', 'payments', 'exit' or 'quit'.")
     while True:
         choice = prompt("Main > ", completer=main_commands).strip().lower()
 

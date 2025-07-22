@@ -8,6 +8,7 @@ from app.models.rate import string_to_level_enum
 def handle_rate_menu():
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
 
+    print("Rates: 'add', 'list', 'update', 'delete' or 'back'.")
     while True:
         choice = prompt("Rates > ", completer=commands).strip().lower()
         

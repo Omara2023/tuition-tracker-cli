@@ -8,6 +8,7 @@ from app.db.cm import get_session
 def handle_payment_menu():
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
 
+    print("Payments: 'add', 'list', 'update', 'delete' or 'back'.")
     while True:
         choice = prompt("Payments > ", completer=commands).strip().lower()
         
