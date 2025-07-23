@@ -1,12 +1,15 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+from sqlalchemy.orm import Session
 from app.db.cm import get_session
 from app.services.student_service import create_student, list_students, get_student, update_student, delete_student
-from app.services.parent_service import get_parent 
+from app.services.parent_service import get_parent, list_parents 
+from app.cli.cli_helpers import ask_bool, ask_required_string
+from app.models.parent import Parent
 
 def handle_student_menu() -> None:
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
-    
+
     print("Students: 'add', 'list', 'update', 'delete' or 'back'.")
     while True:
         choice = prompt("Students > ", completer=commands).strip().lower()
@@ -23,30 +26,33 @@ def handle_student_menu() -> None:
         else:
             print("Unknown command.")
 
+
 def cli_create_student() -> None:
-    try:
-        forename = prompt("Forename: ").strip()
-        surname = prompt("Surname: ").strip()
-        is_active = prompt("Is active, yes or yes (default yes): ").strip().lower()
-        parent_id = int(prompt("Enter parent ID: "))
+    forename = ask_required_string("Forename")
+    surname = ask_required_string("Surname")
+    is_active = ask_bool("Is the student active? (yes/no) [yes]: ", default=True)
 
-        if not forename or not surname or not (is_active in ["yes", "y", "no", "n"]) or not parent_id:
-            raise ValueError
+    with get_session() as db:
+        parent_id = select_parent(db)
+        if (parent_id is None):
+            return
 
-        with get_session() as db:
-            parent = get_parent(db, parent_id)
-            if not parent:
-                print("No parent with that ID.")
-                return
-            
-            created = create_student(db, data={"forename": forename, "surname": surname, "is_active": is_active == "true", "parent_id" : parent_id})
-            if created:
-                print(f"Created student: {created}")
-            else:
-                print("Failed to create student.")
+        parent = get_parent(db, parent_id)
+        if not parent:
+            print("No parent with that ID.")
+            return
+        
+        created = create_student(db, data={
+            "forename": forename,
+            "surname": surname,
+            "is_active": is_active,
+            "parent_id": parent_id
+        })
 
-    except ValueError:
-        print("Invalid input.")
+        if created:
+            print(f"Created student: {created}")
+        else:
+            print("Failed to create student.")
 
 def cli_list_students() -> None:
     try:
@@ -109,3 +115,33 @@ def cli_delete_student() -> None:
             
     except ValueError:
         print("Invalid student id.")
+
+def select_parent(session: Session) -> int | None:
+    parent_list = list_parents(session)
+    if not parent_list:
+        print("No parents available.")
+        return
+    
+    print("\nAvailable Parents:")
+    print(f"{'ID':<5} {'Name':<25} {'Status'}")
+    for parent in parent_list:
+        print(format_parent_row(parent))
+    print()
+
+    try:
+        parent_id = int(prompt("Enter parent ID: ").strip())
+        return parent_id
+    except ValueError:
+        print("Invalid input. Please enter a numeric parent ID.")
+        return None
+    
+def format_parent_row(parent: Parent) -> str:
+    status = "Active" if bool(parent.is_active) else "Inactive"
+    full_name = f"{parent.forename} {parent.surname}"
+    return f"{parent.id:<5} {full_name:<25} {status}"
+
+def format_student_row(student) -> str:
+    full_name = f"{student.forename} {student.surname}"
+    status = "Active" if student.is_active else "Inactive"
+    return f"{student.id:<5} {full_name:<25} {status:<10} Parent ID: {student.parent_id}"
+
