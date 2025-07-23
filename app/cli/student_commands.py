@@ -58,7 +58,7 @@ def cli_list_students() -> None:
         with get_session() as db:
             students = list_students(db)
             if students:
-                print(f"{'ID':<5} {'Name':<25} {'Status':<10} Parent ID")
+                print(f"{'ID':<5} {'Name':<20} {'Status':<10} {'Parent ID':<10}")
                 for s in students:
                     print(format_student_row(s))
             else:
