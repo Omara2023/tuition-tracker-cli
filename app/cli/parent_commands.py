@@ -1,6 +1,10 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+from sqlalchemy.orm import Session
 from app.services.parent_service import create_parent, list_parents, update_parent, delete_parent, get_parent
+from app.cli.cli_helpers import ask_required_string, ask_required_bool, ask_optional_bool, ask_optional_string
+from app.cli.parent_helpers import format_parent_row, parent_table_column_header, select_parent
+from models.parent import Parent
 from app.db.cm import get_session
 
 def handle_parent_menu():
@@ -25,18 +29,11 @@ def handle_parent_menu():
 
 def cli_create_parent() -> None:
     try:
-        forename = prompt("Forename: ").strip()
-        surname = prompt("Surname: ").strip()
-        is_active = prompt("Is active, yes or no (default yes): ").strip().lower()
+        forename = ask_required_string("Forename")
+        surname = ask_required_string("Surname")
+        is_active = ask_required_bool("Is the student active? (yes/no) [yes]: ", default=True)
     
-        data = {}
-
-        if not forename or not surname or not (is_active in ["yes", "y", "no", "n"]):
-            raise ValueError
-
-        data["forename"] = forename
-        data["surname"] = surname
-        data["is_active"] = is_active in ["yes" "y"]
+        data = {"forename": forename, "surname": surname, "is_active": is_active}
 
         with get_session() as db:
             created = create_parent(db, data)
@@ -53,8 +50,9 @@ def cli_list_parents() -> None:
         with get_session() as db:
             parents = list_parents(db)
             if parents:
-                for i in parents:
-                    print(i)
+                print(parent_table_column_header())
+                for p in parents:
+                    format_parent_row(p)
             else:
                 print("Failed to retrieve parents.")
     except Exception as e:
@@ -62,45 +60,50 @@ def cli_list_parents() -> None:
 
 def cli_update_parent() -> None:
     try:
-        id = int(prompt("Enter parent ID to update: "))
-        forename = prompt("New forename (leave blank to skip): ").strip()
-        surname = prompt("New surname (leave blank to skip): ").strip()
-        is_active = prompt("Is active, yes or no (leave blank to skip): ").strip().lower()
+        with get_session() as db:
+            parent = _cli_parent_selection(db)
+            if parent is None: 
+                return
+            else:
+                parent_id = parent.id
+        forename = ask_optional_string("New forename")
+        surname = ask_optional_string("New surname")
+        is_active = ask_optional_bool("Is active, yes or no (leave blank to skip): ")
 
         updates = dict()
-
-        if forename:
-            updates["forename"] = forename
-        if surname:
-            updates["surname"] = surname
-        if is_active:
-            updates["is_active"] = True if is_active in ["yes", "y"] else False
+        if forename: updates["forename"] = forename
+        if surname: updates["surname"] = surname
+        if is_active: updates["is_active"] = is_active
 
         with get_session() as db:
-            updated = update_parent(db, id, updates)
-            if updated:
-                print(f"Updated parent: {updated}")
-            else:
-                print("Parent not found.")
-
+            updated = update_parent(db, parent_id, updates)
+            print(f"Updated parent: {updated}")
+            
     except ValueError:
         print("Invalid input.")
 
 def cli_delete_parent() -> None:
     try:
-        id = int(prompt("Enter parent ID to delete: "))
-
-        with get_session() as db: 
-            to_delete = get_parent(db, id)
-            if not to_delete:
-                print(f"No parent exists with id {id}.")
-                return
-            choice = prompt(f"Are you sure you want to delete parent {to_delete.id} (yes or no)? ").strip().lower()
-            if choice in ["y", "yes"]:
-                if delete_parent(db, id):
+        with get_session() as db:
+            parent = _cli_parent_selection(db)
+            if parent is None: return
+            choice = ask_required_bool(f"Are you sure you want to delete parent {parent.id} (yes or no)?", default=False)
+            if choice:
+                parent_id = parent.id
+                if delete_parent(db, parent_id):
                     print("Successfully deleted parent.")
                 else:
                     print("Failed to delete parent.")
             
     except ValueError:
         print("Invalid parent id.")
+
+def _cli_parent_selection(session: Session) -> Parent | None:
+    parent_id = select_parent(session)
+    if parent_id is None:
+        return None
+    parent = get_parent(session, parent_id)
+    if not parent:
+        print(f"No parent exists with id {parent_id}.")
+        return None
+    return parent
