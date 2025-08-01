@@ -1,7 +1,13 @@
-from sqlalchemy import Column, Integer, ForeignKey, Enum, Float, UniqueConstraint
-from sqlalchemy.orm import relationship
+from __future__ import annotations
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, Enum as SAEnum, UniqueConstraint
 from app.db.base import Base
+from typing import TYPE_CHECKING
 import enum
+
+if TYPE_CHECKING:
+    from app.models.student import Student
+    from app.models.lesson import Lesson
 
 class RateLevel(enum.Enum):
     GCSE = "GCSE"
@@ -13,13 +19,13 @@ class RateLevel(enum.Enum):
 class Rate(Base):
     __tablename__ = "rates"
 
-    id = Column(Integer, primary_key=True)
-    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
-    level = Column(Enum(RateLevel), nullable=False)
-    hourly_rate = Column(Float, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id"), nullable=False)
+    level: Mapped[RateLevel] = mapped_column(SAEnum(RateLevel), nullable=False)
+    hourly_rate: Mapped[float] = mapped_column(nullable=False)
 
-    student = relationship("Student", back_populates="rates")
-    lessons = relationship("Lesson", back_populates="rate", cascade="all, delete-orphan")
+    student: Mapped[Student] = relationship(back_populates="rates")
+    lessons: Mapped[list[Lesson]] = relationship(back_populates="rate", cascade="all, delete-orphan", lazy="selectin")
     
     __table_args__ = (
         UniqueConstraint("student_id", "level", name="uq_student_level"),
@@ -32,8 +38,11 @@ class Rate(Base):
         )
     
     def __str__(self) -> str:
-        return f"{self.id} - {self.student.forename} {self.student.surname} - {self.level} - £{self.hourly_rate:.2f}"
-
+        student = getattr(self, "student", None)
+        if student:
+            return f"{self.id} - {student.forename} {student.surname} - {self.level} - £{self.hourly_rate:.2f}"
+        return f"{self.id} - {self.level} - £{self.hourly_rate:.2f}"
+    
 def string_to_level_enum(input_string: str) -> RateLevel:
     """Helper method to translate user input to enum."""
     mapping = {

@@ -1,20 +1,27 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from app.db.base import Base
+from __future__ import annotations
 from datetime import datetime, timezone
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey
+from app.db.base import Base
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.parent import Parent
+    from app.models.rate import Rate
 
 class Student(Base):
     __tablename__ = "students"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    forename = Column(String(50), index=True, nullable=False)
-    surname = Column(String(50), index=True, nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    parent_id = Column(Integer, ForeignKey("parents.id"), nullable=False) 
-   
-    parent = relationship("Parent", back_populates="students")
-    rates = relationship("Rate", back_populates="student", cascade="all, delete-orphan")
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    forename: Mapped[str] = mapped_column(nullable=False, index=True)
+    surname: Mapped[str] = mapped_column(nullable=False, index=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    
+    parent_id: Mapped[int] = mapped_column(ForeignKey("parents.id"), nullable=False)
+    parent: Mapped[Parent] = relationship(back_populates="students")
+
+    rates: Mapped[list[Rate]] = relationship(back_populates="student", cascade="all, delete-orphan", lazy="selectin")
 
     def __repr__(self) -> str:
         return (
