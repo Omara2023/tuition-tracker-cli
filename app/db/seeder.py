@@ -1,9 +1,10 @@
 from sqlalchemy import select
+from datetime import date
 from app.db.cm import get_session
 from app.models.parent import Parent
 from app.models.student import Student
 from app.models.rate import Rate, RateLevel
-from app.models.lesson import Lesson
+from app.models.lesson import Lesson, Subjects
 
 class Seeder:
     """Basic seeder to populate database."""
@@ -77,9 +78,9 @@ class Seeder:
                 rates = [
                     Rate(student_id=students[0].id, level=RateLevel.GCSE, hourly_rate=25.0),
                     Rate(student_id=students[0].id, level=RateLevel.A_LEVEL, hourly_rate=30.0),
-                    Rate(student_id=students[1].id if len(students) > 1 else students[0].id, level=RateLevel.GCSE, hourly_rate=20.0),
-                    Rate(student_id=students[2].id if len(students) > 2 else students[0].id, level=RateLevel.A_LEVEL, hourly_rate=28.0),
-                    Rate(student_id=students[3].id if len(students) > 3 else students[0].id, level=RateLevel.A_LEVEL, hourly_rate=35.0),
+                    Rate(student_id=students[1].id, level=RateLevel.GCSE, hourly_rate=20.0),
+                    Rate(student_id=students[2].id, level=RateLevel.A_LEVEL, hourly_rate=28.0),
+                    Rate(student_id=students[3].id, level=RateLevel.A_LEVEL, hourly_rate=35.0),
                 ]
 
                 session.add_all(rates)
@@ -88,6 +89,69 @@ class Seeder:
         except Exception as e:
             print(f"Error seeding rates: {e}")
             return False
+        
+    from datetime import date
+
+def _seed_lessons(self) -> bool:
+    try:
+        with get_session() as session:
+            lessons_exist = session.execute(select(Lesson)).scalars().first() is not None
+            if lessons_exist:
+                print("Lessons already seeded.")
+                return True
+
+            rates = session.execute(select(Rate)).scalars().all()
+            if not rates:
+                print("No rates found, cannot seed lessons.")
+                return False
+            
+            lesson_dates = [
+                date(2025, 7, 10),
+                date(2025, 7, 15),
+                date(2025, 7, 20),
+                date(2025, 7, 25),
+                date(2025, 7, 30),
+            ]
+            
+            lessons = [
+                Lesson(
+                    rate_id=rates[0].id,
+                    subject=Subjects.MATHEMATICS,
+                    duration=1.5,
+                    date=lesson_dates[0]
+                ),
+                Lesson(
+                    rate_id=rates[0].id,
+                    subject=Subjects.PHYSICS,
+                    duration=2.0,
+                    date=lesson_dates[1]
+                ),
+                Lesson(
+                    rate_id=rates[1].id if len(rates) > 1 else rates[0].id,
+                    subject=Subjects.CHEMISTRY,
+                    duration=1.0,
+                    date=lesson_dates[2]
+                ),
+                Lesson(
+                    rate_id=rates[1].id,
+                    subject=Subjects.BIOLOGY,
+                    duration=1.5,
+                    date=lesson_dates[3]
+                ),
+                Lesson(
+                    rate_id=rates[2].id,
+                    subject=Subjects.MATHEMATICS,
+                    duration=2.0,
+                    date=lesson_dates[4]
+                ),
+            ]
+
+            session.add_all(lessons)
+            print("Seeded lessons.")
+        return True
+    except Exception as e:
+        print(f"Error seeding lessons: {e}")
+        return False
 
 
 if __name__ == "__main__":

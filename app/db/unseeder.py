@@ -45,4 +45,7 @@ class Unseeder:
 
 if __name__ == "__main__":
     unseeder = Unseeder()
-    unseeder.unseed_all()
+    if unseeder.unseed_all():
+        print("Sucessfully unseeded DB.")
+    else:
+        print("Failed to unseed DB.")
