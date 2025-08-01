@@ -18,9 +18,9 @@ class Payment(Base):
     timestamp: Mapped[datetime] = mapped_column(nullable=False, default= lambda: datetime.now(timezone.utc))
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False) 
 
-    parent: Mapped[Parent] = relationship(back_populates="payments", lazy="selectin")
-    lesson_payments: Mapped[list[LessonPayment]] = relationship(back_populates="payment", cascade="all, delete-orphan", lazy="selectin")
-    lessons: Mapped[list[Lesson]] = relationship(secondary="lesson_payments", viewonly=True, back_populates="payments", lazy="selectin")
+    parent: Mapped["Parent"] = relationship("Parent", back_populates="payments", lazy="selectin")
+    lesson_payments: Mapped[list["LessonPayment"]] = relationship("LessonPayment", back_populates="payment", cascade="all, delete-orphan", lazy="selectin")
+    lessons: Mapped[list["Lesson"]] = relationship("Lesson", secondary="lesson_payments", viewonly=True, back_populates="payments", lazy="selectin")
 
     __table_args__ = (
         UniqueConstraint("timestamp", "parent_id", name="uix_parent_timestamp"),

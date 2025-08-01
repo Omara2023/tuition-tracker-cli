@@ -24,8 +24,8 @@ class Rate(Base):
     level: Mapped[RateLevel] = mapped_column(SAEnum(RateLevel), nullable=False)
     hourly_rate: Mapped[float] = mapped_column(nullable=False)
 
-    student: Mapped[Student] = relationship(back_populates="rates")
-    lessons: Mapped[list[Lesson]] = relationship(back_populates="rate", cascade="all, delete-orphan", lazy="selectin")
+    student: Mapped["Student"] = relationship("Student", back_populates="rates")
+    lessons: Mapped[list["Lesson"]] = relationship("Lesson", back_populates="rate", cascade="all, delete-orphan", lazy="selectin")
     
     __table_args__ = (
         UniqueConstraint("student_id", "level", name="uq_student_level"),

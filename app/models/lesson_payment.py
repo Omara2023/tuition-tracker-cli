@@ -15,5 +15,5 @@ class LessonPayment(Base):
     payment_id: Mapped[int] = mapped_column(ForeignKey("payments.id"), primary_key=True)
     amount_paid: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
 
-    lesson: Mapped[Lesson] = relationship(back_populates="lesson_payments")
-    payment: Mapped[Payment] = relationship(back_populates="lesson_payments")
+    lesson: Mapped["Lesson"] = relationship("Lesson", back_populates="lesson_payments")
+    payment: Mapped["Payment"] = relationship("Payment", back_populates="lesson_payments")

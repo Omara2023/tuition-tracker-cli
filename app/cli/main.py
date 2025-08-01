@@ -1,6 +1,5 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
-import app.db.models_registry
 from app.cli.parent_commands import handle_parent_menu
 from app.cli.student_commands import handle_student_menu
 from app.cli.rate_commands import handle_rate_menu

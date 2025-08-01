@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.services.parent_service import create_parent, list_parents, update_parent, delete_parent, get_parent
 from app.cli.cli_helpers import ask_required_string, ask_required_bool, ask_optional_bool, ask_optional_string
 from app.cli.parent_helpers import format_parent_row, parent_table_column_header, select_parent
-from models.parent import Parent
+from app.models.parent import Parent
 from app.db.cm import get_session
 
 def handle_parent_menu():

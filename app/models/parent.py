@@ -17,8 +17,8 @@ class Parent(Base):
     is_active: Mapped[bool] = mapped_column( default=True)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
-    students: Mapped[list[Student]] = relationship("Student", back_populates="parent", cascade="all, delete-orphan", lazy="selectin")
-    payments: Mapped[list[Payment]] = relationship("Payment", back_populates="parent", cascade="all, delete-orphan", lazy="selectin")
+    students: Mapped[list["Student"]] = relationship("Student", back_populates="parent", cascade="all, delete-orphan", lazy="selectin")
+    payments: Mapped[list["Payment"]] = relationship("Payment", back_populates="parent", cascade="all, delete-orphan", lazy="selectin")
 
     def __repr__(self) -> str:
         return (

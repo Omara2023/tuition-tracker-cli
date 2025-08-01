@@ -19,9 +19,9 @@ class Student(Base):
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     
     parent_id: Mapped[int] = mapped_column(ForeignKey("parents.id"), nullable=False)
-    parent: Mapped[Parent] = relationship(back_populates="students")
+    parent: Mapped["Parent"] = relationship("Parent", back_populates="students")
 
-    rates: Mapped[list[Rate]] = relationship(back_populates="student", cascade="all, delete-orphan", lazy="selectin")
+    rates: Mapped[list["Rate"]] = relationship("Rate", back_populates="student", cascade="all, delete-orphan", lazy="selectin")
 
     def __repr__(self) -> str:
         return (

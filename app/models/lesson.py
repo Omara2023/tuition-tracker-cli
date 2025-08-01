@@ -29,10 +29,10 @@ class Lesson(Base):
     duration: Mapped[float] = mapped_column(nullable=False)
     date: Mapped[date] = mapped_column(nullable=False)
     
-    rate: Mapped[Rate] = relationship(back_populates="lessons")
-    lesson_payments: Mapped[list[LessonPayment]] = relationship(back_populates="lesson", cascade="all, delete-orphan", lazy="selectin")
+    rate: Mapped["Rate"] = relationship("Rate", back_populates="lessons")
+    lesson_payments: Mapped[list["LessonPayment"]] = relationship("LessonPayment", back_populates="lesson", cascade="all, delete-orphan", lazy="selectin")
     
-    payments: Mapped[list[Payment]] = relationship(secondary="lesson_payments", back_populates="lessons", viewonly=True, lazy="selectin")
+    payments: Mapped[list["Payment"]] = relationship("Payment", secondary="lesson_payments", back_populates="lessons", viewonly=True, lazy="selectin")
 
     def __repr__(self) -> str:
         return (
