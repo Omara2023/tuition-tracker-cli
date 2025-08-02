@@ -77,17 +77,23 @@ class Seeder:
 
                 students = session.execute(select(Student)).scalars().all()
                 if not students:
-                    print("No students found, cannot seed rates.")
+                    print("No students found.")
                     return False
 
-                rates = [
-                    Rate(student_id=students[0].id, level=RateLevel.GCSE, hourly_rate=25.0),
-                    Rate(student_id=students[0].id, level=RateLevel.A_LEVEL, hourly_rate=30.0),
-                    Rate(student_id=students[1].id, level=RateLevel.GCSE, hourly_rate=20.0),
-                    Rate(student_id=students[2].id, level=RateLevel.A_LEVEL, hourly_rate=28.0),
-                    Rate(student_id=students[3].id, level=RateLevel.A_LEVEL, hourly_rate=35.0),
-                ]
+                rates = []
+                levels = [RateLevel.GCSE, RateLevel.A_LEVEL]
 
+                for student in students:
+                    num_rates = randint(1,2)
+                    assigned_levels = sample(levels, k=num_rates)
+                    for level in assigned_levels:
+                        hourly_rate = round(randint(400, 1000) * 0.05, 2) #£20.00–£50.00
+                        rates.append(Rate(
+                            student_id=student.id, 
+                            level=level, 
+                            hourly_rate=hourly_rate
+                        ))
+                       
                 session.add_all(rates)
                 print("Seeded rates.")
             return True
@@ -163,25 +169,70 @@ class Seeder:
                 if payments_exist:
                     print("Payments already seeded.")
                     return True
+                
                 lessons = session.execute(select(Lesson)).scalars().all() 
                 if not lessons:
                     print("No lessons to seed payments for.")
                     return False
 
-                payments: list[Payment] = list()
+                parent_to_lessons: dict[int, list[Lesson]] = defaultdict(list)
 
                 for lesson in lessons:
-                    parent = lesson.rate.student.parent
-                    delay = timedelta(days=randint(1, 10))
-                    payment_time = datetime(year=lesson.date.year, month=lesson.date.month, day=lesson.date.day, hour=randint(0, 23), minute=randint(0, 59)) + delay
-                    cost = lesson.rate.hourly_rate * lesson.duration
+                    parent_id = lesson.rate.student.parent.id
+                    parent_to_lessons[parent_id].append(lesson)
 
-                    payment = Payment(parent_id=parent.id, timestamp=payment_time, amount=cost)
-                    payments.append(payment)
+                def random_time(base_date: date) -> datetime:
+                    delay = timedelta(days=randint(1, 15), hours=randint(0,23), minutes=randint(0, 59))
+                    return datetime.combine(base_date, datetime.min.time()) + delay
+                    
+                strategies = ["full", "partial", "per_lesson", "none"]
+                weights = [0.3, 0.3, 0.3, 0.1]
+
+                payments = []
+
+                for parent_id, parent_lessons in parent_to_lessons.items():
+                    if not parent_lessons:
+                        continue
+                        
+                    strategy = choices(strategies, weights, k=1)[0]
+                    base_date = min(l.date for l in parent_lessons)
+
+                    match strategy:
+                        case "none":
+                            print(f"Parent {parent_id} will not pay.")
+                            continue
+                        case "full":
+                            total = sum(l.rate.hourly_rate * l.duration for l in parent_lessons)
+                            payments.append(Payment(
+                                parent_id=parent_id, 
+                                amount=round(total, 2),
+                                timestamp=random_time(base_date)
+                            ))
+                            print(f"Parent {parent_id}: full payment for all lessons.")
+                        case "partial":
+                            subset = sample(parent_lessons, k=randint(1, len(parent_lessons)))
+                            total = sum(l.rate.hourly_rate * l.duration for l in subset)
+                            payments.append(Payment(
+                                parent_id=parent_id, 
+                                amount=round(total, 2),
+                                timestamp=random_time(base_date)
+                            ))
+                            print(f"Parent {parent_id}: partial payment for {len(subset)} lesson(s).")
+                        case "per_lesson":
+                            for lesson in parent_lessons:
+                                base_amount = lesson.rate.hourly_rate * lesson.duration
+                                fuzzed_amount = round(base_amount * randint(80, 110) / 100, 2)
+                                payments.append(Payment(
+                                parent_id=parent_id,
+                                amount=fuzzed_amount,
+                                timestamp=random_time(lesson.date)
+                            ))
+                            print(f"Parent {parent_id}: paid per lesson ({len(parent_lessons)} payments).")
 
                 session.add_all(payments)
             print("Successfully seeded payments.")
             return True
+        
         except Exception as e:
             print(f"Error seeding payments {e}.")
             return False
