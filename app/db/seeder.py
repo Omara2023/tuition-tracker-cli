@@ -1,6 +1,8 @@
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 from datetime import datetime, date, timedelta
-from random import randint
+from collections import defaultdict
+from random import randint, choices, sample
 from app.db.cm import get_session
 from app.models.parent import Parent
 from app.models.student import Student
@@ -190,47 +192,35 @@ class Seeder:
         with get_session() as session:
             lessons = session.execute(select(Lesson)).scalars().all()
             for lesson in lessons:
-                payment, available_amount = self._get_compatible_payment(lesson)
-                if payment is None:
-                    print(f"No valid payment exists to cover this lesson: {lesson}.")
-                    failed = True
-                    continue
-                
                 lesson_cost = lesson.rate.hourly_rate * lesson.duration
-                if lesson_cost == 0: continue
-                    
-                if lesson_cost <= available_amount: #case 1: lesson can be paid in full by the remainder of this payment.
-                    session.add(LessonPayment(lesson_id=lesson.id, payment_id=payment.id, amount_paid=lesson_cost)) 
-                else: #case 2: lesson cannot be covered by current payment alone.
-                    session.add(LessonPayment(lesson_id=lesson.id, patment_id=payment.id, amount_paid=available_amount))
-                    lesson_cost -= available_amount
-                    while (lesson_cost > 0) :
-                        payment, available_amount = self._get_compatible_payment(lesson)
-                        if payment is None:
-                            failed = True
-                            print(f"No more valid payments exist to cover this lesson: {lesson}.")
-                            break
-                        amount_to_contribute = min(lesson_cost, payment.amount)
-                        session.add(LessonPayment(lesson_id=lesson, payment_id=payment.id, amount_paid=amount_to_contribute))
-                        lesson_cost -= amount_to_contribute
-                    
-            if failed:
-                print("Linking lessons to payments fully has failed.")
-            else:
-                print("All lessons successfully linked to payments and covered in full.")
+                if lesson_cost == 0:
+                    print(f"Zero cost lesson skipped: {lesson.id}")
+                    continue
 
-            return failed
+                while lesson_cost > 0:
+                    payment, available = self._get_compatible_payment(lesson, session)
+                    if payment is None:
+                        print(f"Cannot fully cover lesson {lesson.id}")
+                        failed = True
+                        break
 
-    def _get_compatible_payment(self, lesson: Lesson) -> tuple[Payment | None, float]:
-        with get_session() as session:
-            parent = lesson.rate.student.parent
-            candidate_payments = session.execute(select(Payment).where(Payment.parent_id == parent.id)).scalars().all()
-            for payment in candidate_payments:
-                lesson_payments = session.execute(select(LessonPayment).where(LessonPayment.payment_id == payment.id)).scalars().all()
-                total_payment_value_used = sum([lp.amount_paid for lp in lesson_payments])
-                if total_payment_value_used < payment.amount:
-                    return payment, payment.amount - total_payment_value_used
-            return None, 0
+                    to_pay = min(lesson_cost, available)
+                    session.add(LessonPayment(lesson_id=lesson.id, payment_id=payment.id, amount_paid=to_pay))
+                    session.flush()
+                    lesson_cost -= to_pay
+
+        print("Linking complete." if not failed else "Linking incomplete.")
+        return not failed
+
+    def _get_compatible_payment(self, lesson: Lesson, session: Session) -> tuple[Payment | None, float]:
+        parent_id = lesson.rate.student.parent.id
+        payments = session.execute(select(Payment).where(Payment.parent_id == parent_id)).scalars().all()
+        for payment in payments:
+            used = session.execute(select(LessonPayment.amount_paid).where(LessonPayment.payment_id == payment.id)).scalars().all()
+            remaining = payment.amount - sum(used)
+            if remaining > 0:
+                return payment, remaining
+        return None, 0
                 
 if __name__ == "__main__":
     seeder = Seeder()
