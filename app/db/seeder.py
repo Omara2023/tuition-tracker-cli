@@ -12,7 +12,7 @@ from app.models.lesson_payment import LessonPayment
 class Seeder:
     """Basic seeder to populate database."""
     def seed_all(self) -> bool:
-        return self._seed_parents() and self._seed_students() and self._seed_rates() and self._seed_lessons()
+        return self._seed_parents() and self._seed_students() and self._seed_rates() and self._seed_lessons() and self._seed_payments()
 
     def _seed_parents(self) -> bool:
         try:
@@ -184,8 +184,54 @@ class Seeder:
             print(f"Error seeding payments {e}.")
             return False
 
-        
+    def _link_lessons_to_payments(self) -> bool:
+        """Returns if all lessons were successfully linked to and covered fully by a payment."""
+        failed = False
+        with get_session() as session:
+            lessons = session.execute(select(Lesson)).scalars().all()
+            for lesson in lessons:
+                payment, available_amount = self._get_compatible_payment(lesson)
+                if payment is None:
+                    print(f"No valid payment exists to cover this lesson: {lesson}.")
+                    failed = True
+                    continue
+                
+                lesson_cost = lesson.rate.hourly_rate * lesson.duration
+                if lesson_cost == 0: continue
+                    
+                if lesson_cost <= available_amount: #case 1: lesson can be paid in full by the remainder of this payment.
+                    session.add(LessonPayment(lesson_id=lesson.id, payment_id=payment.id, amount_paid=lesson_cost)) 
+                else: #case 2: lesson cannot be covered by current payment alone.
+                    session.add(LessonPayment(lesson_id=lesson.id, patment_id=payment.id, amount_paid=available_amount))
+                    lesson_cost -= available_amount
+                    while (lesson_cost > 0) :
+                        payment, available_amount = self._get_compatible_payment(lesson)
+                        if payment is None:
+                            failed = True
+                            print(f"No more valid payments exist to cover this lesson: {lesson}.")
+                            break
+                        amount_to_contribute = min(lesson_cost, payment.amount)
+                        session.add(LessonPayment(lesson_id=lesson, payment_id=payment.id, amount_paid=amount_to_contribute))
+                        lesson_cost -= amount_to_contribute
+                    
+            if failed:
+                print("Linking lessons to payments fully has failed.")
+            else:
+                print("All lessons successfully linked to payments and covered in full.")
 
+            return failed
+
+    def _get_compatible_payment(self, lesson: Lesson) -> tuple[Payment | None, float]:
+        with get_session() as session:
+            parent = lesson.rate.student.parent
+            candidate_payments = session.execute(select(Payment).where(Payment.parent_id == parent.id)).scalars().all()
+            for payment in candidate_payments:
+                lesson_payments = session.execute(select(LessonPayment).where(LessonPayment.payment_id == payment.id)).scalars().all()
+                total_payment_value_used = sum([lp.amount_paid for lp in lesson_payments])
+                if total_payment_value_used < payment.amount:
+                    return payment, payment.amount - total_payment_value_used
+            return None, 0
+                
 if __name__ == "__main__":
     seeder = Seeder()
     if seeder.seed_all():
