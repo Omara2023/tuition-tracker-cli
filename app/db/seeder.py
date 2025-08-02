@@ -61,7 +61,7 @@ class Seeder:
                     return True
                 
                 students = []
-                parents = session.execute(select(Parent).where(Parent)).scalars().all()
+                parents = session.execute(select(Parent)).scalars().all()
                 
                 for parent in parents:
                     for _ in range(randint(1, 3)):
@@ -141,8 +141,8 @@ class Seeder:
                         date=lesson_date
                     ))
 
-            session.add_all(lessons)
-            print(f"Seeded {len(lessons)} random lessons.")
+                session.add_all(lessons)
+                print(f"Seeded {len(lessons)} random lessons.")
             return True
         except Exception as e:
             print(f"Error seeding lessons: {e}")
