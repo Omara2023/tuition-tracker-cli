@@ -261,8 +261,7 @@ class Seeder:
                 
 if __name__ == "__main__":
     seeder = Seeder()
-    if seeder.seed_all():
-        print("Seeding successfull.")
-    else:
-        print("Seeding failed.")
+    success = seeder.seed_all()
+    print(f"Seeding {'successfull' if success else 'failed'}.")
+
             

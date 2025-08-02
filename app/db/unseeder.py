@@ -2,6 +2,8 @@ from typing import Type
 from sqlalchemy import delete, select
 from sqlalchemy.orm import DeclarativeMeta
 from app.db.cm import get_session
+from app.models.lesson_payment import LessonPayment
+from app.models.payment import Payment
 from app.models.lesson import Lesson
 from app.models.rate import Rate
 from app.models.student import Student
@@ -23,6 +25,12 @@ class Unseeder:
             print(f"Error deleting {class_name}: {e}")
             return False
     
+    def _unseed_lesson_payments(self) -> bool:
+        return self._unseed(LessonPayment, "lesson_payment")
+
+    def _unseed_payments(self) -> bool:
+        return self._unseed(Payment, "payment")
+
     def _unseed_lessons(self) -> bool:
         return self._unseed(Lesson, "lesson")
 
@@ -37,6 +45,8 @@ class Unseeder:
 
     def unseed_all(self) -> bool:
         return (
+            self._unseed_lesson_payments() and
+            self._unseed_payments() and
             self._unseed_lessons() and
             self._unseed_rates() and
             self._unseed_students() and
