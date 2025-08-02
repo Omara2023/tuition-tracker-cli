@@ -2,7 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from datetime import datetime, date, timedelta
 from collections import defaultdict
-from random import randint, choices, sample
+from random import randint, choices, sample, choice
+from faker import Faker
 from app.db.cm import get_session
 from app.models.parent import Parent
 from app.models.student import Student
@@ -13,22 +14,38 @@ from app.models.lesson_payment import LessonPayment
 
 class Seeder:
     """Basic seeder to populate database."""
+
+    def __init__(self) -> None:
+        self.faker = Faker()
+
     def seed_all(self) -> bool:
         return self._seed_parents() and self._seed_students() and self._seed_rates() and self._seed_lessons() and self._seed_payments()
 
-    def _seed_parents(self) -> bool:
+    def _make_parent(self) -> Parent:
+        return Parent(
+            forename=self.faker.first_name(),
+            surname=self.faker.last_name(),
+            is_active=self.faker.boolean(chance_of_getting_true=75)
+        )
+    
+    def _make_student(self, parent_id: int) -> Student:
+        return Student(
+            forename=self.faker.first_name(),
+            surname=self.faker.last_name(),
+            is_active=self.faker.boolean(chance_of_getting_true=80),
+            parent_id=parent_id
+        )
+
+    def _seed_parents(self, num_parents: int = 10) -> bool:
         try:
             with get_session() as session:
                 parents_exist = session.execute(select(Parent)).scalars().first() is not None
                 if parents_exist:
                     print("Parents already seeded.")
-                    return True   
-                session.add_all([
-                    Parent(forename="John", surname="Doe", is_active=True),
-                    Parent(forename="Bob", surname="Jones", is_active=True),
-                    Parent(forename="Jake", surname="Lockwood", is_active=False),
-                    Parent(forename="Ben", surname="Kareem", is_active=False)
-                ])
+                    return True  
+
+                parents = [self._make_parent() for _ in range(num_parents)] 
+                session.add_all(parents)
                 print("Seeded parents.")
             return True
         except Exception as e:
@@ -42,24 +59,15 @@ class Seeder:
                 if students_exist:
                     print("Students already seeded.")
                     return True
-                john = session.execute(select(Parent).where(Parent.forename == "John")).scalars().first()
-                bob = session.execute(select(Parent).where(Parent.forename == "Bob")).scalars().first() 
-                jake = session.execute(select(Parent).where(Parent.forename == "Jake")).scalars().first()
-                ben  = session.execute(select(Parent).where(Parent.forename == "Ben")).scalars().first()
                 
-                if not john or not bob or not jake or not  ben: 
-                    missing = [name for name, p in zip(["John", "Bob", "Jake", "Ben"], [john, bob, jake, ben]) if p is None]
-                    print(f"Missing parents: {missing}")
-                    return False
+                students = []
+                parents = session.execute(select(Parent).where(Parent)).scalars().all()
                 
-                session.add_all([
-                    Student(forename="Jane", surname="Doe", is_active=True, parent_id=john.id),
-                    Student(forename="Charlie", surname="Doe", is_active=True, parent_id=john.id),
-                    Student(forename="Bobbington", surname="Jones", is_active=True, parent_id=bob.id),
-                    Student(forename="Jimmy", surname="Lockwood", is_active=False, parent_id=jake.id),
-                    Student(forename="Billy", surname="Kareem", is_active=False, parent_id=ben.id)
-                ])
-
+                for parent in parents:
+                    for _ in range(randint(1, 3)):
+                        students.append(self._make_student(parent.id))
+                
+                session.add_all(students)
                 print("Seeded students.")
             return True
                     
@@ -101,7 +109,7 @@ class Seeder:
             print(f"Error seeding rates: {e}")
             return False
         
-    def _seed_lessons(self) -> bool:
+    def _seed_lessons(self, num_lessons: int = 25) -> bool:
         try:
             with get_session() as session:
                 lessons_exist = session.execute(select(Lesson)).scalars().first() is not None
@@ -111,52 +119,30 @@ class Seeder:
 
                 rates = session.execute(select(Rate)).scalars().all()
                 if not rates:
-                    print("No rates found, cannot seed lessons.")
+                    print("No rates found.")
                     return False
                 
-                lesson_dates = [
-                    date(2025, 7, 10),
-                    date(2025, 7, 15),
-                    date(2025, 7, 20),
-                    date(2025, 7, 25),
-                    date(2025, 7, 30),
-                ]
+                lesson_subjects = list(Subjects)
                 
-                lessons = [
-                    Lesson(
-                        rate_id=rates[0].id,
-                        subject=Subjects.MATHEMATICS,
-                        duration=1.5,
-                        date=lesson_dates[0]
-                    ),
-                    Lesson(
-                        rate_id=rates[0].id,
-                        subject=Subjects.PHYSICS,
-                        duration=2.0,
-                        date=lesson_dates[1]
-                    ),
-                    Lesson(
-                        rate_id=rates[1].id,
-                        subject=Subjects.CHEMISTRY,
-                        duration=1.0,
-                        date=lesson_dates[2]
-                    ),
-                    Lesson(
-                        rate_id=rates[1].id,
-                        subject=Subjects.BIOLOGY,
-                        duration=1.5,
-                        date=lesson_dates[3]
-                    ),
-                    Lesson(
-                        rate_id=rates[2].id,
-                        subject=Subjects.MATHEMATICS,
-                        duration=2.0,
-                        date=lesson_dates[4]
-                    ),
-                ]
+                lessons = []
 
-                session.add_all(lessons)
-                print("Seeded lessons.")
+                for _ in range(num_lessons):
+                    rate = choice(rates)
+                    subject = choice(lesson_subjects)
+                    duration = choice([1.0, 1.5, 2.0])
+
+                    days_ago = randint(0, 60)
+                    lesson_date = date.today() - timedelta(days=days_ago)
+
+                    lessons.append(Lesson(
+                        rate_id=rate.id,
+                        subject=subject,
+                        duration=duration,
+                        date=lesson_date
+                    ))
+
+            session.add_all(lessons)
+            print(f"Seeded {len(lessons)} random lessons.")
             return True
         except Exception as e:
             print(f"Error seeding lessons: {e}")
