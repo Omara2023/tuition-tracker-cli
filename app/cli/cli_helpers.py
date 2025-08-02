@@ -50,7 +50,41 @@ def ask_optional_bool(prompt_text: str, default: bool | None = None) -> bool | N
         print("Invalid input. Please enter 'yes' or 'no', or leave blank.")
 
 def print_table(items, columns: list[str], headers: list[str] | None = None, formatters=None):
-    """Takes column names, headers to print and formatters for combined attributes. Formatter key is column name to string factory."""
+    """
+    Print a formatted table of objects to the console.
+
+    Parameters:
+    - items (list): A list of objects to display as rows. Each object should have
+      attributes corresponding to the specified columns.
+    - columns (list[str]): List of attribute names or keys to extract from each item.
+      These identify which data to show in each column.
+    - headers (list[str] | None): Optional list of column header names to print.
+      If None, the `columns` list is used as headers.
+    - formatters (dict | None): Optional dictionary mapping column names to functions
+      that take an item and return a string to display for that column.
+      Use this for computed or combined columns (e.g., concatenating first and last name).
+
+    Behavior:
+    - Dynamically calculates column widths based on header names and cell content.
+    - Prints a header row with column names, a separator line, and one row per item.
+    - Adds a blank line before and after the table for readability.
+    - Prints a friendly message and returns early if `items` is empty or None.
+
+    Example usage:
+
+        def format_name(p):
+            return f"{p.forename} {p.surname}"
+
+        def format_status(p):
+            return "Active" if p.is_active else "Inactive"
+
+        print_table(
+            parent_list,
+            columns=["id", "name", "status"],
+            headers=["ID", "Name", "Status"],
+            formatters={"name": format_name, "status": format_status}
+        )
+    """
     if not items:
         print("No data to display.")
         return

@@ -36,3 +36,4 @@ def print_parent_table(session: Session) -> None:
             "status": format_status,
         }
     )
+
