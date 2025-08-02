@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from prompt_toolkit import prompt
+from app.cli.cli_helpers import print_table
 from app.models.parent import Parent
 from app.services.parent_service import list_parents 
 
@@ -10,10 +11,7 @@ def select_parent(session: Session) -> int | None:
         return None
     
     print("\nAvailable Parents:")
-    print(parent_table_column_header())
-    for parent in parent_list:
-        print(format_parent_row(parent))
-    print()
+    print_parent_table(session)
 
     try:
         parent_id = int(prompt("Enter parent ID: ").strip())
@@ -22,10 +20,19 @@ def select_parent(session: Session) -> int | None:
         print("Invalid input. Please enter a numeric parent ID.")
         return None
     
-def format_parent_row(parent: Parent) -> str:
-    status = "Active" if bool(parent.is_active) else "Inactive"
-    full_name = f"{parent.forename} {parent.surname}"
-    return f"{parent.id:<5} {full_name:<20} {status:<10}"
+def format_name(p: Parent) -> str:
+    return f"{p.forename} {p.surname}" 
 
-def parent_table_column_header() -> str:
-    return f"{'ID':<5} {'Name':<20} {'Status':<10}"
+def format_status(p: Parent) -> str:
+    return "Active" if p.is_active else "Inactive"
+
+def print_parent_table(session: Session) -> None:
+    print_table(
+        items=list_parents(session),
+        columns=["id", "name", "status"],
+        headers=["ID", "Name", "Status"],
+        formatters={
+            "name": format_name,
+            "status": format_status,
+        }
+    )

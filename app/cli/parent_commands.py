@@ -3,7 +3,7 @@ from prompt_toolkit.completion import WordCompleter
 from sqlalchemy.orm import Session
 from app.services.parent_service import create_parent, list_parents, update_parent, delete_parent, get_parent
 from app.cli.cli_helpers import ask_required_string, ask_required_bool, ask_optional_bool, ask_optional_string
-from app.cli.parent_helpers import format_parent_row, parent_table_column_header, select_parent
+from app.cli.parent_helpers import print_parent_table, select_parent
 from app.models.parent import Parent
 from app.db.cm import get_session
 
@@ -47,12 +47,10 @@ def cli_create_parent() -> None:
 
 def cli_list_parents() -> None:
     try:
-        with get_session() as db:
-            parents = list_parents(db)
+        with get_session() as session:
+            parents = list_parents(session)
             if parents:
-                print(parent_table_column_header())
-                for p in parents:
-                    format_parent_row(p)
+                print_parent_table(session)
             else:
                 print("Failed to retrieve parents.")
     except Exception as e:
@@ -60,8 +58,8 @@ def cli_list_parents() -> None:
 
 def cli_update_parent() -> None:
     try:
-        with get_session() as db:
-            parent = _cli_parent_selection(db)
+        with get_session() as session:
+            parent = _cli_parent_selection(session)
             if parent is None: 
                 return
             else:
