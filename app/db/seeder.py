@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, date, timedelta
 from collections import defaultdict
 from random import randint, choices, sample, choice
+from decimal import Decimal
 from faker import Faker
 from app.db.cm import get_session
 from app.models.parent import Parent
@@ -19,7 +20,9 @@ class Seeder:
         self.faker = Faker()
 
     def seed_all(self) -> bool:
-        return self._seed_parents() and self._seed_students() and self._seed_rates() and self._seed_lessons() and self._seed_payments()
+        success = self._seed_parents() and self._seed_students() and self._seed_rates() and self._seed_lessons() and self._seed_payments()
+        self._link_lessons_to_payments()
+        return success
 
     def _make_parent(self) -> Parent:
         return Parent(
@@ -36,7 +39,7 @@ class Seeder:
             parent_id=parent_id
         )
 
-    def _seed_parents(self, num_parents: int = 10) -> bool:
+    def _seed_parents(self, num_parents: int = 5) -> bool:
         try:
             with get_session() as session:
                 parents_exist = session.execute(select(Parent)).scalars().first() is not None
@@ -64,11 +67,11 @@ class Seeder:
                 parents = session.execute(select(Parent)).scalars().all()
                 
                 for parent in parents:
-                    for _ in range(randint(1, 3)):
+                    for _ in range(choices(population=[1,2,3], weights=[0.6, 0.3, 0.1], k=1)[0]):
                         students.append(self._make_student(parent.id))
                 
                 session.add_all(students)
-                print("Seeded students.")
+                print(f"Seeded {len(students)} students.")
             return True
                     
         except Exception as e:
@@ -92,10 +95,10 @@ class Seeder:
                 levels = [RateLevel.GCSE, RateLevel.A_LEVEL]
 
                 for student in students:
-                    num_rates = randint(1,2)
+                    num_rates = choices(population=[1,2], weights=[0.7, 0.3], k=1)[0]
                     assigned_levels = sample(levels, k=num_rates)
                     for level in assigned_levels:
-                        hourly_rate = round(randint(400, 1000) * 0.05, 2) #£20.00–£50.00
+                        hourly_rate = float(choice(range(15, 51, 5))) #£15.00–£50.00
                         rates.append(Rate(
                             student_id=student.id, 
                             level=level, 
@@ -109,7 +112,7 @@ class Seeder:
             print(f"Error seeding rates: {e}")
             return False
         
-    def _seed_lessons(self, num_lessons: int = 25) -> bool:
+    def _seed_lessons(self, num_lessons: int = 20) -> bool:
         try:
             with get_session() as session:
                 lessons_exist = session.execute(select(Lesson)).scalars().first() is not None
@@ -188,7 +191,7 @@ class Seeder:
                             print(f"Parent {parent_id} will not pay.")
                             continue
                         case "full":
-                            total = sum(l.rate.hourly_rate * l.duration for l in parent_lessons)
+                            total = sum(l.cost() for l in parent_lessons)
                             payments.append(Payment(
                                 parent_id=parent_id, 
                                 amount=round(total, 2),
@@ -197,7 +200,7 @@ class Seeder:
                             print(f"Parent {parent_id}: full payment for all lessons.")
                         case "partial":
                             subset = sample(parent_lessons, k=randint(1, len(parent_lessons)))
-                            total = sum(l.rate.hourly_rate * l.duration for l in subset)
+                            total = sum(l.cost() for l in subset)
                             payments.append(Payment(
                                 parent_id=parent_id, 
                                 amount=round(total, 2),
@@ -206,7 +209,7 @@ class Seeder:
                             print(f"Parent {parent_id}: partial payment for {len(subset)} lesson(s).")
                         case "per_lesson":
                             for lesson in parent_lessons:
-                                base_amount = lesson.rate.hourly_rate * lesson.duration
+                                base_amount = lesson.cost()
                                 fuzzed_amount = round(base_amount * randint(80, 110) / 100, 2)
                                 payments.append(Payment(
                                 parent_id=parent_id,
@@ -229,7 +232,7 @@ class Seeder:
         with get_session() as session:
             lessons = session.execute(select(Lesson)).scalars().all()
             for lesson in lessons:
-                lesson_cost = lesson.rate.hourly_rate * lesson.duration
+                lesson_cost = lesson.cost()
                 if lesson_cost == 0:
                     print(f"Zero cost lesson skipped: {lesson.id}")
                     continue
@@ -249,7 +252,7 @@ class Seeder:
         print("Linking complete." if not failed else "Linking incomplete.")
         return not failed
 
-    def _get_compatible_payment(self, lesson: Lesson, session: Session) -> tuple[Payment | None, float]:
+    def _get_compatible_payment(self, lesson: Lesson, session: Session) -> tuple[Payment | None, Decimal]:
         parent_id = lesson.rate.student.parent.id
         payments = session.execute(select(Payment).where(Payment.parent_id == parent_id)).scalars().all()
         for payment in payments:
@@ -257,7 +260,7 @@ class Seeder:
             remaining = payment.amount - sum(used)
             if remaining > 0:
                 return payment, remaining
-        return None, 0
+        return None, Decimal(str(0))
                 
 if __name__ == "__main__":
     seeder = Seeder()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, Enum as SAEnum, UniqueConstraint
+from sqlalchemy import Numeric, ForeignKey, Enum as SAEnum, UniqueConstraint
+from decimal import Decimal
 from app.db.base import Base
 from typing import TYPE_CHECKING
 import enum
@@ -22,7 +23,7 @@ class Rate(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     student_id: Mapped[int] = mapped_column(ForeignKey("students.id"), nullable=False)
     level: Mapped[RateLevel] = mapped_column(SAEnum(RateLevel), nullable=False)
-    hourly_rate: Mapped[float] = mapped_column(nullable=False)
+    hourly_rate: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     student: Mapped["Student"] = relationship("Student", back_populates="rates")
     lessons: Mapped[list["Lesson"]] = relationship("Lesson", back_populates="rate", cascade="all, delete-orphan", lazy="selectin")

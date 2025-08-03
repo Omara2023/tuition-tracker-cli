@@ -1,6 +1,7 @@
 from __future__ import annotations
 from sqlalchemy import ForeignKey, Numeric, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from decimal import Decimal
 from datetime import datetime, timezone
 from app.db.base import Base
 from typing import TYPE_CHECKING
@@ -16,7 +17,7 @@ class Payment(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     parent_id: Mapped[int] = mapped_column(ForeignKey("parents.id"), nullable=False)
     timestamp: Mapped[datetime] = mapped_column(nullable=False, default= lambda: datetime.now(timezone.utc))
-    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False) 
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False) 
 
     parent: Mapped["Parent"] = relationship("Parent", back_populates="payments", lazy="selectin")
     lesson_payments: Mapped[list["LessonPayment"]] = relationship("LessonPayment", back_populates="payment", cascade="all, delete-orphan", lazy="selectin")

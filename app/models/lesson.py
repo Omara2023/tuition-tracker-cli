@@ -1,5 +1,6 @@
 from __future__ import annotations
 from datetime import date
+from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, Enum as SAEnum
 from app.db.base import Base
@@ -50,6 +51,11 @@ class Lesson(Base):
     @property
     def student(self):
         return self.rate.student
+    
+    def cost(self) -> Decimal:
+        if self.rate is None:
+            raise ValueError("Lesson has no associated rate.")
+        return self.rate.hourly_rate * Decimal(str(self.duration))
     
 def string_to_subject_enum(input_string: str) -> Subjects:
     "Converter function to transform text input to enum."
