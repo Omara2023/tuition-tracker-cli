@@ -1,4 +1,6 @@
 from prompt_toolkit import prompt
+from collections.abc import Sequence, Callable
+from sqlalchemy.engine import Row
 
 def ask_required_string(field_name: str) -> str:
     while True:
@@ -111,5 +113,31 @@ def print_model_table(items, columns: list[str], headers: list[str] | None = Non
         for column, width in zip(columns, widths):
             val = formatters[column](item) if column in formatters else getattr(item, column, "")
             row.append(f"{val:<{width}}")
+        print(" | ".join(row))
+    print()
+
+
+def print_join_table(rows: Sequence[Row], columns: list[Callable[[Row], str]], headers: list[str]) -> None:
+    """Pretty-print rows of joined ORM objects using extractor functions."""
+    if not rows:
+        print("No data to display")
+        return
+    
+    #Column width calculator:
+    widths = []
+    for i, header in enumerate(headers):
+        max_width = len(header)
+        for row in rows:
+            val = str(columns[i](row))
+            max_width = max(max_width, len(val))
+        widths.append(max_width)
+
+    #Print header:
+    print(" | ".join(f"{h:<{w}}" for h, w in zip(headers, widths)))
+    print("-+-".join("-" * w for w in widths))
+
+    #Rows:
+    for row in rows:
+        row = [f"{columns[i](row):<{widths[i]}}" for i in range(len(headers))]
         print(" | ".join(row))
     print()
