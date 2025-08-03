@@ -49,7 +49,7 @@ def ask_optional_bool(prompt_text: str, default: bool | None = None) -> bool | N
 
         print("Invalid input. Please enter 'yes' or 'no', or leave blank.")
 
-def print_table(items, columns: list[str], headers: list[str] | None = None, formatters=None):
+def print_table(items, columns: list[str], headers: list[str] | None = None, formatters: dict | None = None):
     """
     Print a formatted table of objects to the console.
 
@@ -100,7 +100,6 @@ def print_table(items, columns: list[str], headers: list[str] | None = None, for
             max_width = max(max_width, len(str(val)))
         widths.append(max_width)
 
-    print()
     #Header and separator:
     print(" | ".join(f"{h:<{w}}" for h, w in zip(headers, widths)))
     print("-+-".join("-" * w for w in widths))

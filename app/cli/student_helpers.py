@@ -1,7 +1,23 @@
+from sqlalchemy.orm import Session
 from app.models.student import Student
+from app.cli.cli_helpers import print_table
+from app.services.student_service import list_students
 
-def format_student_row(student: Student) -> str:
-    full_name = f"{student.forename} {student.surname}"
-    status = "Active" if bool(student.is_active) else "Inactive"
-    return f"{student.id:<5} {full_name:<20} {status:<10} {student.parent_id:<10}"
+def print_student_table(session: Session) -> None:
+    students = list_students(session)
+    
+    print_table(
+        items=students,
+        columns=["id", "name", "status"],
+        headers=["ID", "Name", "Status"],
+        formatters={
+            "name": format_name,
+            "status": format_status 
+        }
+    )
 
+def format_name(s: Student) -> str:
+    return f"{s.forename} {s.surname}"
+
+def format_status(s: Student) -> str:
+    return "Active" if s.is_active else "Inactive"
