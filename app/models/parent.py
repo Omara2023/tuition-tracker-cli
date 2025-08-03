@@ -2,11 +2,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from app.models.student import Student
-    from app.models.payment import Payment
+from app.models.student import Student
+from app.models.payment import Payment
 
 class Parent(Base):
     __tablename__ = "parents"

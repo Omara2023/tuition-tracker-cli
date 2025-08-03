@@ -49,7 +49,7 @@ def ask_optional_bool(prompt_text: str, default: bool | None = None) -> bool | N
 
         print("Invalid input. Please enter 'yes' or 'no', or leave blank.")
 
-def print_table(items, columns: list[str], headers: list[str] | None = None, formatters: dict | None = None):
+def print_model_table(items, columns: list[str], headers: list[str] | None = None, formatters: dict | None = None):
     """
     Print a formatted table of objects to the console.
 

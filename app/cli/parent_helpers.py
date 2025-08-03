@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from prompt_toolkit import prompt
-from app.cli.cli_helpers import print_table
+from app.cli.cli_helpers import print_model_table
 from app.models.parent import Parent
 from app.services.parent_service import list_parents 
 
@@ -27,7 +27,7 @@ def format_status(p: Parent) -> str:
     return "Active" if p.is_active else "Inactive"
 
 def print_parent_table(session: Session) -> None:
-    print_table(
+    print_model_table(
         items=list_parents(session),
         columns=["id", "name", "status"],
         headers=["ID", "Name", "Status"],
