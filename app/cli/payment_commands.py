@@ -71,7 +71,7 @@ def cli_update_payment() -> None:
         id = ask_required_int("Payment ID of payment to update")
         parent_id = ask_optional_int("New ParentID (leave blank to skip)")
         timestamp = ask_optional_string("New payment time (leave blank to skip)")
-        amount = ask_required_float("New amount (GBP) (leave blank to skip)")
+        amount = ask_optional_float("New amount (GBP) (leave blank to skip)")
 
         #--TODO: Implement workflow to change which lesson(s) a payment is linked to.--#
         updates = dict()

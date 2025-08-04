@@ -234,4 +234,7 @@ pip-selfcheck.json
 
 alembic/versions
 
+#Jupyter notebooks
+*.ipynb
+
 # End of https://www.toptal.com/developers/gitignore/api/jupyternotebooks,python,data,visualstudiocode,venv
