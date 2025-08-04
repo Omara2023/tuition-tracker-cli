@@ -31,6 +31,24 @@ def ask_optional_int(field_name: str) -> int | None:
         print("Invalid input. Must be a number.")
         return None
 
+def ask_required_float(field_name: str) -> float:
+    while True:
+        raw = prompt(f"{field_name} (number required): ").strip()
+        try:
+            return int(raw)
+        except ValueError:
+            print("Invalid input. Must be a number.")
+
+def ask_optional_float(field_name: str) -> float | None:
+    raw = prompt(f"{field_name} (leave blank to skip): ").strip()
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        print("Invalid input. Must be a number.")
+        return None
+
 def ask_required_bool(prompt_text: str, default: bool = True) -> bool:
     raw = prompt(f"{prompt_text} [{'yes' if default else 'no'}]: ").strip().lower()
     if raw in ["yes", "y"]: return True
