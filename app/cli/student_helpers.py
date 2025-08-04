@@ -31,10 +31,10 @@ def print_parents_with_students(session: Session) -> None:
     print_join_table(
         rows=items,
         columns=[
-            lambda t: t[0].id,
-            lambda t: f"{t[0].forename} {t[0].surname}",
             lambda t: t[1].id,
             lambda t: f"{t[1].forename} {t[1].surname}",
+            lambda t: "Active" if t[1].is_active else "Inactive",
+            lambda t: f"{t[0].forename} {t[0].surname}",            
         ],
-        headers=["Parent ID", "Parent", "Student ID", "Student"]
+        headers=["ID", "Name", 'Status', "Parent"]
     )

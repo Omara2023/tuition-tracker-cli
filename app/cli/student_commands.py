@@ -4,8 +4,8 @@ from app.db.cm import get_session
 from app.services.student_service import create_student, list_students, get_student, update_student, delete_student
 from app.services.parent_service import get_parent
 from app.cli.cli_helpers import ask_required_bool, ask_optional_bool, ask_required_string, ask_optional_string, ask_required_int
-from app.cli.student_helpers import print_student_table, print_parents_with_students
-from app.cli.parent_helpers import select_parent
+from app.cli.student_helpers import print_parents_with_students
+from app.cli.parent_helpers import print_parent_table
 
 def handle_student_menu() -> None:
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
@@ -32,10 +32,9 @@ def cli_create_student() -> None:
     is_active = ask_required_bool("Is the student active? (yes/no) [yes]: ", default=True)
 
     with get_session() as session:
-        parent_id = select_parent(session)
-        if (parent_id is None):
-            return
-
+        print_parent_table(session)
+        parent_id = ask_required_int("Parent ID of parent to link student to.")
+        
         parent = get_parent(session, parent_id)
         if not parent:
             print("No parent with that ID.")
@@ -58,7 +57,7 @@ def cli_list_students() -> None:
         with get_session() as session:
             students = list_students(session)
             if students:
-                print_student_table(session)
+                print_parents_with_students(session)
             else:
                 print("Zero students to list.")
     except Exception:
@@ -69,14 +68,15 @@ def cli_update_student() -> None:
         with get_session() as session:
             print_parents_with_students(session)
 
-        student_id = ask_required_int("Enter ID of student to update")
+            student_id = ask_required_int("Enter ID of student to update")
 
-        print("Leave blank to skip fields that should remain unchanged. ")
-        forename = ask_optional_string("New forename")
-        surname = ask_optional_string("New surname")
-        is_active = ask_optional_bool("Is active (yes/no): ")
-        with get_session() as session:
-            parent_id = select_parent(session)
+            print("Leave blank to skip fields that should remain unchanged. ")
+            forename = ask_optional_string("New forename")
+            surname = ask_optional_string("New surname")
+            is_active = ask_optional_bool("Is active (yes/no): ")
+        
+            print_parent_table(session)
+            parent_id = ask_required_int("New Parent ID")
  
         updates = dict()
         if forename: updates["forename"] = forename
@@ -101,7 +101,6 @@ def cli_update_student() -> None:
 
 def cli_delete_student() -> None:
     try:
-        
         with get_session() as session: 
             print_parents_with_students(session)
             student_id = ask_required_int("Enter student ID to delete: ")

@@ -16,7 +16,7 @@ def print_payments_with_parent(session: Session) -> None:
             lambda t: t[1].id,
             lambda t: f"{t[0].forename} {t[0].surname}",
             lambda t: t[1].amount,
-            lambda t: t[1].timestamp
+            lambda t: str(t[1].timestamp)
         ],
         headers=["Payment ID", "Parent", "Amount", "Date"]
     )

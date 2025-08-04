@@ -6,7 +6,7 @@ from app.models.rate import Rate
 from app.models.lesson import Lesson
 
 def print_lessons_with_student_and_rate(session: Session) -> None:
-    items = session.execute(select(Student, Rate, Lesson).join(Student.rates).join(Rate.lessons)).all() 
+    items = session.execute(select(Student, Rate, Lesson).join(Student.rates).join(Rate.lessons).order_by(Student.forename, Student.surname)).all() 
     if not items:
         print("No lessons to display.")
         return
@@ -16,12 +16,12 @@ def print_lessons_with_student_and_rate(session: Session) -> None:
         columns=[
             lambda t: t[2].id,
             lambda t: f"{t[0].forename} {t[0].surname}",
-            lambda t: t[2].date,
+            lambda t: str(t[2].date),
             lambda t: t[1].level,
             lambda t: t[2].subject,
             lambda t: t[1].hourly_rate,
             lambda t: t[2].duration,
-            lambda t: t[2].cost(),
+            lambda t: round(t[2].cost(), 2),
         ],
-        headers=["ID", "Student", "Date", "Level", "Subject", "Rate", "Duration", "Cost"] #paid for status via querying payment?????
+        headers=["ID", "Student", "Date", "Level", "Subject", "Rate", "Length", "Cost"] #paid for status via querying payment?????
     )

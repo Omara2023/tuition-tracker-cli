@@ -31,7 +31,7 @@ def cli_create_parent() -> None:
     try:
         forename = ask_required_string("Forename")
         surname = ask_required_string("Surname")
-        is_active = ask_required_bool("Is the student active? (yes/no) [yes]: ", default=True)
+        is_active = ask_required_bool("Is the parent active? (yes/no) [yes]: ", default=True)
     
         data = {"forename": forename, "surname": surname, "is_active": is_active}
 
