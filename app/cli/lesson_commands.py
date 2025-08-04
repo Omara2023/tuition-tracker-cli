@@ -7,7 +7,7 @@ from app.services.rate_service import get_rate
 from app.models.lesson import string_to_subject_enum
 from app.cli.cli_helpers import ask_required_int, ask_required_string, ask_required_float, ask_optional_int, ask_optional_string, ask_optional_float, ask_required_bool
 from app.cli.rate_helpers import print_rate_with_student
-from app.cli.lesson_helpers import print_lessons
+from app.cli.lesson_helpers import print_lessons_with_student_and_rate
 
 def handle_lesson_menu():
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
@@ -62,14 +62,14 @@ def cli_create_lesson() -> None:
 def cli_list_lessons() -> None:
     try:
         with get_session() as session:
-            print_lessons(session)
+            print_lessons_with_student_and_rate(session)
     except Exception as e:
         print(f"Failed to list lessons: {e}")
 
 def cli_update_lesson() -> None:
     try:
         with get_session() as session:
-            print_lessons(session)
+            print_lessons_with_student_and_rate(session)
             id = ask_required_int("Lesson ID of lesson to edit")
 
             print_rate_with_student(session)
@@ -98,7 +98,7 @@ def cli_update_lesson() -> None:
 def cli_delete_lesson() -> None:
     try:
         with get_session() as session: 
-            print_lessons(session)
+            print_lessons_with_student_and_rate(session)
 
             id = ask_required_int("Enter LessonID of lesson to delete: ") 
             to_delete = get_lesson(session, id)

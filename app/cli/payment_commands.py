@@ -1,9 +1,13 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from datetime import datetime
-from app.services.payment_service import create_payment, list_payments, get_payment, update_payment, delete_payment
+from decimal import Decimal
+from app.services.payment_service import create_payment, get_payment, update_payment, delete_payment
 from app.services.parent_service import get_parent
 from app.db.cm import get_session
+from app.cli.cli_helpers import ask_required_int, ask_required_string, ask_required_float, ask_required_bool, ask_optional_int, ask_optional_float, ask_optional_string
+from app.cli.parent_helpers import print_parent_table
+from app.cli.payment_helpers import print_payments_with_parent
 
 def handle_payment_menu():
     commands = WordCompleter(["add", "list", "update", "delete", "back"], ignore_case=True)
@@ -28,26 +32,24 @@ def handle_payment_menu():
 
 def cli_create_payment() -> None:
     try:
-        parent_id = int(prompt("ParentID of payment maker: ").strip())
-        timestamp = prompt("Timestamp when payment was made: ").strip()
-        amount = prompt("Payment amount (GBP): ").strip().lower()
-    
-        data = {}
+        with get_session() as session:
+            print_parent_table(session)
+            parent_id = ask_required_int("Parent ID")
+            timestamp = ask_required_string("Timestamp when payment was made")
+            amount = ask_required_float("Payment amount (GBP)")
+        
+            data = {}
 
-        if not parent_id or not timestamp or not amount:
-            raise ValueError
+            data["parent_id"] = parent_id
+            data["timestamp"] = datetime.strptime(timestamp, "%Y-%m-%d %H:%M")
+            data["amount"] = Decimal(str(amount))
 
-        data["parent_id"] = parent_id
-        data["timestamp"] = datetime.strptime(timestamp, "%Y-%m-%d %H:%M")
-        data["amount"] = float(amount)
-
-        with get_session() as db:
-            parent = get_parent(db, parent_id)
+            parent = get_parent(session, parent_id)
             if not parent:
-                print("Invalid ParentID.")
+                print("Invalid Parent ID.")
                 return
 
-            created = create_payment(db, data)
+            created = create_payment(session, data)
             if created:
                 print(f"Created payment: {created}")
             else:
@@ -59,31 +61,24 @@ def cli_create_payment() -> None:
 
 def cli_list_payments() -> None:
     try:
-        with get_session() as db:
-            if (payments := list_payments(db)) :
-                for i in payments:
-                    print(i)
-            else:
-                print("Failed to retrieve payments.")
+        with get_session() as session:
+            print_payments_with_parent(session)
     except Exception as e:
         print(f"Failed to retrieve payments {e}.")
 
 def cli_update_payment() -> None:
     try:
-        id = int(prompt("Enter PaymentID to update: "))
-        parent_id = prompt("New ParentID (leave blank to skip): ").strip()
-        timestamp = prompt("New payment time (leave blank to skip): ").strip()
-        amount = prompt("New amount (GBP) (leave blank to skip): ").strip().lower()
+        id = ask_required_int("Payment ID of payment to update")
+        parent_id = ask_optional_int("New ParentID (leave blank to skip)")
+        timestamp = ask_optional_string("New payment time (leave blank to skip)")
+        amount = ask_required_float("New amount (GBP) (leave blank to skip)")
 
         #--TODO: Implement workflow to change which lesson(s) a payment is linked to.--#
         updates = dict()
 
-        if parent_id:
-            updates["parent_id"] = int(parent_id)
-        if timestamp:
-            updates["timestamp"] = timestamp
-        if amount:
-            updates["amount"] = float(amount)
+        if parent_id: updates["parent_id"] = parent_id
+        if timestamp: updates["timestamp"] = timestamp
+        if amount: updates["amount"] = Decimal(str(amount))
 
         with get_session() as db:
             updated = update_payment(db, id, updates)
@@ -97,16 +92,17 @@ def cli_update_payment() -> None:
 
 def cli_delete_payment() -> None:
     try:
-        id = int(prompt("Enter PaymentID to delete: "))
+        with get_session() as session: 
+            print_payments_with_parent(session)
+            id = ask_required_int("Enter Payment ID to delete")
 
-        with get_session() as db: 
-            to_delete = get_payment(db, id)
+            to_delete = get_payment(session, id)
             if not to_delete:
                 print(f"No payment exists with id {id}.")
                 return
-            choice = prompt(f"Are you sure you want to delete payment {to_delete.id} (yes or no)? ").strip().lower()
-            if choice in ["y", "yes"]:
-                if delete_payment(db, id):
+            choice = ask_required_bool(f"Are you sure you want to delete payment {to_delete.id} (yes or no)? ")
+            if choice:
+                if delete_payment(session, id):
                     print("Successfully deleted payment.")
                 else:
                     print("Failed to delete payment.")
