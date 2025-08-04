@@ -1,7 +1,11 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+from decimal import Decimal
 from app.db.cm import get_session
-from app.services.rate_service import create_rate, list_rates, get_rate, update_rate, delete_rate
+from app.services.rate_service import create_rate, get_rate, update_rate, delete_rate
+from app.cli.cli_helpers import ask_required_int, ask_required_string, ask_required_float, ask_optional_float, ask_optional_string, ask_required_bool
+from app.cli.rate_helpers import print_rate_with_student
+from app.cli.student_helpers import print_parents_with_students
 from app.services.student_service import get_student
 from app.models.rate import string_to_level_enum
 
@@ -27,24 +31,23 @@ def handle_rate_menu():
 
 def cli_create_rate() -> None:
     try:
-        student_id = int(prompt("Student ID: ").strip())
-        level = prompt("Level ").strip()
-        rate = float(prompt("Hourly rate (GBP): ").strip().lower())
-    
-        data = {}
+        with get_session() as session:
+            print_parents_with_students(session)
+            
+            student_id = ask_required_int("Student ID")
+            level = ask_required_string("Level")
+            rate = ask_required_float("Hourly rate (GBP)")
+        
+            data = {}
 
-        if not student_id or not level or not rate:
-            raise ValueError
+            data["student_id"] = student_id
+            data["level"] = string_to_level_enum(level)        
+            data["hourly_rate"] = Decimal(str(rate))
 
-        data["student_id"] = student_id
-        data["level"] = string_to_level_enum(level)        
-        data["hourly_rate"] = rate
-
-        with get_session() as db:
-            if not get_student(db, student_id):
-                print("Invalid student ID.")
+            if not get_student(session, student_id):
+                print("Invalid Student ID.")
                 return
-            created = create_rate(db, data)
+            created = create_rate(session, data)
             if created:
                 print(f"Created rate: {created}")
             else:
@@ -57,31 +60,24 @@ def cli_create_rate() -> None:
 
 def cli_list_rates() -> None:
     try:
-        with get_session() as db:
-            rates = list_rates(db)
-            if rates:
-                for i in rates:
-                    print(i)
-            else:
-                print("Zero rates to list.")
+        with get_session() as session:
+            print_rate_with_student(session)
     except Exception as e:
         print(f"Failed to retrieve rates {e}.")
 
 def cli_update_rate() -> None:
     try:
-        id = int(prompt("Enter RateID to update: "))
-        student_id = prompt("New StudentID (leave blank to skip): ").strip()
-        level = prompt("New level: GCSE or A-LEVEL (leave blank to skip): ").strip()
-        hourly_rate = prompt("New hourly rate: (leave blank to skip): ").strip().lower()
+
+        id = ask_required_int("Enter RateID to update")
+        student_id = ask_optional_string("New StudentID (leave blank to skip)")
+        level = ask_optional_string("New level: GCSE or A-LEVEL (leave blank to skip)")
+        hourly_rate = ask_optional_float("New hourly rate: (leave blank to skip)")
 
         updates = dict()
 
-        if student_id:
-            updates["student_id"] = int(student_id)
-        if level:
-            updates["level"] = string_to_level_enum(level)
-        if hourly_rate:
-            updates["hourly_rate"] = float(hourly_rate)
+        if student_id: updates["student_id"] = int(student_id)
+        if level: updates["level"] = string_to_level_enum(level)
+        if hourly_rate: updates["hourly_rate"] = Decimal(str(hourly_rate))
 
         with get_session() as db:
             updated = update_rate(db, id, updates)
@@ -95,13 +91,13 @@ def cli_update_rate() -> None:
 
 def cli_delete_rate() -> None:
     try:
-        id = int(prompt("Enter rate ID to delete: "))
-
-        with get_session() as db: 
-            to_delete = get_rate(db, id)
-            choice = prompt(f"Are you sure you want to delete rate {to_delete.id} (yes or no)? ").strip().lower()
-            if choice in ["y", "yes"]:
-                if delete_rate(db, id):
+        with get_session() as session: 
+            print_rate_with_student(session)
+            id = ask_required_int("Enter rate ID to delete: ")
+            to_delete = get_rate(session, id)
+            choice = ask_required_bool(f"Are you sure you want to delete rate {to_delete.id} (yes or no)?")
+            if choice:
+                if delete_rate(session, id):
                     print("Successfully deleted rate.")
                 else:
                     print("Failed to delete rate.")
