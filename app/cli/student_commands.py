@@ -4,7 +4,7 @@ from app.db.cm import get_session
 from app.services.student_service import create_student, list_students, get_student, update_student, delete_student
 from app.services.parent_service import get_parent
 from app.cli.cli_helpers import ask_required_bool, ask_optional_bool, ask_required_string, ask_optional_string, ask_required_int
-from app.cli.student_helpers import print_student_table
+from app.cli.student_helpers import print_student_table, print_parents_with_students
 from app.cli.parent_helpers import select_parent
 
 def handle_student_menu() -> None:
@@ -67,7 +67,7 @@ def cli_list_students() -> None:
 def cli_update_student() -> None:
     try:
         with get_session() as session:
-            print_student_table(session)
+            print_parents_with_students(session)
 
         student_id = ask_required_int("Enter ID of student to update")
 
@@ -103,7 +103,7 @@ def cli_delete_student() -> None:
     try:
         
         with get_session() as session: 
-            print_student_table(session)
+            print_parents_with_students(session)
             student_id = ask_required_int("Enter student ID to delete: ")
             student = get_student(session, student_id)
             if not student:
